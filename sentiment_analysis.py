@@ -1,11 +1,27 @@
 from __future__ import annotations
 
+import argparse
 import os
 import sys
+from typing import Protocol
 
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 from azure.core.exceptions import AzureError
+
+
+DEFAULT_TEXT = (
+    "La atencion del personal fue excelente y resolvieron rapidamente "
+    "mi solicitud. Sin embargo, la aplicacion presento varios errores "
+    "y tardo demasiado en cargar."
+)
+DEFAULT_LANGUAGE = "es"
+
+
+class ConfidenceScoresLike(Protocol):
+    positive: float
+    neutral: float
+    negative: float
 
 
 def create_client() -> TextAnalyticsClient:
@@ -39,7 +55,25 @@ def create_client() -> TextAnalyticsClient:
     )
 
 
-def show_scores(title: str, scores: object) -> None:
+def parse_args() -> argparse.Namespace:
+    """Parsea argumentos opcionales para texto e idioma."""
+    parser = argparse.ArgumentParser(
+        description="Analiza sentimiento con Azure AI Language."
+    )
+    parser.add_argument(
+        "--text",
+        default=DEFAULT_TEXT,
+        help="Texto a analizar.",
+    )
+    parser.add_argument(
+        "--language",
+        default=DEFAULT_LANGUAGE,
+        help="Codigo de idioma del texto (ejemplo: es, en).",
+    )
+    return parser.parse_args()
+
+
+def show_scores(title: str, scores: ConfidenceScoresLike) -> None:
     """Muestra las puntuaciones de confianza como porcentajes."""
     print(title)
     print(f"  Positivo: {scores.positive * 100:.2f} %")
@@ -47,20 +81,33 @@ def show_scores(title: str, scores: object) -> None:
     print(f"  Negativo: {scores.negative * 100:.2f} %")
 
 
-def analyze_sentiment(client: TextAnalyticsClient, text: str) -> None:
-    """Analiza el sentimiento y las opiniones presentes en un texto."""
-    documents = [
+def build_documents(text: str, language: str) -> list[dict[str, str]]:
+    """Construye la lista de documentos para Azure AI Language."""
+    return [
         {
             "id": "documento-1",
-            "language": "es",
+            "language": language,
             "text": text,
         }
     ]
+
+
+def analyze_sentiment(
+    client: TextAnalyticsClient,
+    text: str,
+    language: str,
+) -> None:
+    """Analiza el sentimiento y las opiniones presentes en un texto."""
+    documents = build_documents(text=text, language=language)
 
     results = client.analyze_sentiment(
         documents=documents,
         show_opinion_mining=True,
     )
+
+    if not results:
+        print("No se recibieron resultados del servicio.")
+        return
 
     document = results[0]
 
@@ -99,15 +146,15 @@ def analyze_sentiment(client: TextAnalyticsClient, text: str) -> None:
 
 
 def main() -> None:
-    text = (
-        "La atención del personal fue excelente y resolvieron rápidamente "
-        "mi solicitud. Sin embargo, la aplicación presentó varios errores "
-        "y tardó demasiado en cargar."
-    )
+    args = parse_args()
 
     try:
         client = create_client()
-        analyze_sentiment(client, text)
+        analyze_sentiment(
+            client=client,
+            text=args.text,
+            language=args.language,
+        )
 
     except RuntimeError as error:
         print(f"Error de configuración: {error}")
