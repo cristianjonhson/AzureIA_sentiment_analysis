@@ -15,6 +15,7 @@ El script procesa un texto, calcula el sentimiento general (positivo, neutral y 
 - [Cómo ejecutarlo](#cómo-ejecutarlo)
 - [Salida esperada](#salida-esperada)
 - [Solución de problemas](#solución-de-problemas)
+- [Patrones de diseño](#patrones-de-diseño)
 - [Mejoras recomendadas](#mejoras-recomendadas)
 
 ## Descripción del proyecto
@@ -48,6 +49,7 @@ Dependencias principales (ver [requirements.txt](requirements.txt)):
 AzureIA_sentiment_analysis/
 ├── .gitignore
 ├── README.md
+├── design_patterns.md
 ├── requirements.txt
 └── sentiment_analysis.py
 ```
@@ -160,6 +162,23 @@ Verifica:
 - validez de la clave
 - endpoint correcto
 - permisos del recurso en Azure
+
+## Patrones de diseño
+
+En el código actual se aplican principalmente estos patrones:
+
+- Factory (Simple Factory): centraliza la creación y validación del cliente de Azure.
+- Dependency Injection (por parámetro): la función de análisis recibe el cliente en vez de crearlo internamente.
+- Facade/Service Function (ligero): una función orquesta la llamada al SDK y la presentación del resultado.
+- Fail Fast / Guard Clauses: validaciones tempranas para errores de configuración.
+
+Patrón más apropiado para este proyecto hoy:
+
+- Factory combinado con Dependency Injection.
+
+Documento detallado (con justificación y ubicación exacta en código):
+
+- [design_patterns.md](design_patterns.md)
 
 ## Mejoras recomendadas
 
