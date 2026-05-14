@@ -54,7 +54,7 @@ AzureIA_sentiment_analysis/
 ├── requirements.txt
 ├── sentiment_analysis.py
 └── tests/
-  └── test_sentiment_analysis.py
+    └── test_sentiment_analysis.py
 ```
 
 Archivo principal de ejecución:
@@ -198,6 +198,13 @@ En el código actual se aplican principalmente estos patrones:
 - Dependency Injection (por parámetro): la función de análisis recibe el cliente en vez de crearlo internamente.
 - Facade/Service Function (ligero): una función orquesta la llamada al SDK y la presentación del resultado.
 - Fail Fast / Guard Clauses: validaciones tempranas para errores de configuración.
+- Parameter Object Style: argumentos de entrada agrupados en `args` mediante `argparse`.
+- Contrato estructural con Protocol: tipado mínimo para las puntuaciones de confianza.
+
+En pruebas unitarias también se aplican:
+
+- Test Double (Fake): reemplazo del SDK de Azure con clases fake para aislar pruebas.
+- Fixture con Context Manager: setup/teardown encapsulado para cargar módulos fake y limpiar estado.
 
 Patrón más apropiado para este proyecto hoy:
 
