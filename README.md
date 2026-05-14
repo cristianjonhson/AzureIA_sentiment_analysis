@@ -13,6 +13,7 @@ El script procesa un texto, calcula el sentimiento general (positivo, neutral y 
 - [Configuración](#configuración)
 - [Instalación](#instalación)
 - [Cómo ejecutarlo](#cómo-ejecutarlo)
+- [Pruebas unitarias](#pruebas-unitarias)
 - [Salida esperada](#salida-esperada)
 - [Solución de problemas](#solución-de-problemas)
 - [Patrones de diseño](#patrones-de-diseño)
@@ -51,7 +52,9 @@ AzureIA_sentiment_analysis/
 ├── README.md
 ├── design_patterns.md
 ├── requirements.txt
-└── sentiment_analysis.py
+├── sentiment_analysis.py
+└── tests/
+  └── test_sentiment_analysis.py
 ```
 
 Archivo principal de ejecución:
@@ -138,6 +141,19 @@ Parametros disponibles:
 
 - `--text`: texto a analizar.
 - `--language`: codigo de idioma (por ejemplo, `es`, `en`, `pt`).
+
+## Pruebas unitarias
+
+El proyecto incluye pruebas unitarias minimas para:
+
+- `create_client`
+- `build_documents`
+
+Ejecucion:
+
+```bash
+python -m unittest discover -s tests -v
+```
 
 ## Salida esperada
 
