@@ -1,25 +1,26 @@
 # Patrones de diseno en el proyecto
 
-Este documento resume los patrones de diseno observados en el codigo actual y recomienda el patron mas apropiado para la evolucion del proyecto.
+Este documento resume los patrones de diseno observados en el estado actual del repositorio y distingue entre patrones aplicados en codigo de aplicacion y en pruebas.
 
 ## Contexto
 
-Archivo analizado:
+Archivos analizados:
 
 - [sentiment_analysis.py](sentiment_analysis.py)
+- [tests/test_sentiment_analysis.py](tests/test_sentiment_analysis.py)
+
+## Patrones en codigo de aplicacion
 
 ## 1) Factory (Simple Factory)
 
 ### Donde se ve
 
-- [Funcion create_client](sentiment_analysis.py#L11)
-- Construccion y retorno del cliente en [sentiment_analysis.py](sentiment_analysis.py#L36)
+- [Funcion create_client](sentiment_analysis.py#L27)
+- Construccion y retorno del cliente en [sentiment_analysis.py](sentiment_analysis.py#L52)
 
 ### Por que aplica
 
 `create_client` encapsula la creacion de `TextAnalyticsClient` junto con validaciones de configuracion (`LANGUAGE_ENDPOINT`, `LANGUAGE_KEY`).
-
-Esto evita repetir logica de inicializacion en varios puntos y centraliza una responsabilidad critica: crear un cliente valido para Azure AI Language.
 
 ### Beneficio en este proyecto
 
@@ -31,8 +32,8 @@ Esto evita repetir logica de inicializacion en varios puntos y centraliza una re
 
 ### Donde se ve
 
-- Firma de [analyze_sentiment](sentiment_analysis.py#L50)
-- Inyeccion desde [main](sentiment_analysis.py#L109)
+- Firma de [analyze_sentiment](sentiment_analysis.py#L95)
+- Inyeccion desde [main](sentiment_analysis.py#L152)
 
 ### Por que aplica
 
@@ -40,49 +41,88 @@ Esto evita repetir logica de inicializacion en varios puntos y centraliza una re
 
 ### Beneficio en este proyecto
 
-- Facilita pruebas unitarias (se puede pasar un mock/fake client).
+- Facilita pruebas unitarias.
 - Reduce acoplamiento entre configuracion y logica de negocio.
 
 ## 3) Facade/Service Function (ligero)
 
 ### Donde se ve
 
-- Orquestacion principal de analisis en [analyze_sentiment](sentiment_analysis.py#L50)
+- Orquestacion principal de analisis en [analyze_sentiment](sentiment_analysis.py#L95)
 
 ### Por que aplica
 
 La funcion concentra la interaccion con la API externa y expone un punto de entrada de alto nivel para el caso de uso de analisis de sentimiento.
 
-No es un Facade formal con clases, pero cumple su intencion: simplificar el uso del SDK para el resto del programa.
-
-### Beneficio en este proyecto
-
-- Flujo principal mas claro desde `main`.
-- Menor dispersion de llamadas al SDK.
-
-## 4) Fail Fast / Guard Clauses (patron de robustez)
+## 4) Fail Fast / Guard Clauses
 
 ### Donde se ve
 
-- Validacion de variables requeridas en [sentiment_analysis.py](sentiment_analysis.py#L20)
-- Validacion de formato de endpoint en [sentiment_analysis.py](sentiment_analysis.py#L25)
-- Validacion de endpoint incorrecto (Foundry project endpoint) en [sentiment_analysis.py](sentiment_analysis.py#L30)
+- Validacion de variables requeridas en [sentiment_analysis.py](sentiment_analysis.py#L36)
+- Validacion de formato de endpoint en [sentiment_analysis.py](sentiment_analysis.py#L41)
+- Validacion de endpoint incorrecto en [sentiment_analysis.py](sentiment_analysis.py#L46)
+- Validacion de resultados vacios en [sentiment_analysis.py](sentiment_analysis.py#L108)
 
 ### Por que aplica
 
-El codigo valida condiciones criticas al inicio y falla rapido con mensajes explicitos, evitando ejecuciones ambiguas o errores mas costosos aguas abajo.
+El codigo valida condiciones criticas al inicio y falla rapido con mensajes explicitos, evitando ejecuciones ambiguas o errores mas costosos.
 
-## Patron mas apropiado para este proyecto
+## 5) Parameter Object Style (configuracion de entrada)
 
-El patron mas apropiado para el estado actual del proyecto es:
+### Donde se ve
 
-- Factory (como base), combinado con Dependency Injection.
+- Parseo y agrupacion de parametros en [parse_args](sentiment_analysis.py#L58)
+- Uso de `args` en [main](sentiment_analysis.py#L149)
+
+### Por que aplica
+
+La entrada de ejecucion se centraliza en un objeto de argumentos, mejorando legibilidad y evolucion del CLI.
+
+## 6) Interface por contrato estructural (Protocol)
+
+### Donde se ve
+
+- Definicion de contrato en [ConfidenceScoresLike](sentiment_analysis.py#L21)
+- Uso en [show_scores](sentiment_analysis.py#L76)
+
+### Por que aplica
+
+Se define un contrato minimo de atributos esperados para reducir warnings de tipado y desacoplar la funcion de una clase concreta del SDK.
+
+## Patrones en pruebas unitarias
+
+## 7) Test Double (Fake)
+
+### Donde se ve
+
+- Fakes del SDK en [tests/test_sentiment_analysis.py](tests/test_sentiment_analysis.py#L31)
+
+### Por que aplica
+
+Permite probar la logica propia sin depender de red, credenciales reales ni comportamiento externo del servicio.
+
+## 8) Fixture con Context Manager
+
+### Donde se ve
+
+- Preparacion/limpieza de modulos fake en [fake_azure_modules](tests/test_sentiment_analysis.py#L13)
+- Carga aislada del modulo bajo prueba en [loaded_module](tests/test_sentiment_analysis.py#L74)
+
+### Por que aplica
+
+Encapsula setup/teardown de pruebas para mantener aislamiento entre casos y evitar efectos laterales globales.
+
+## Patron mas apropiado para el proyecto
+
+Para el estado actual, el patron mas apropiado sigue siendo:
+
+- Factory combinado con Dependency Injection.
 
 ### Justificacion
 
-- El principal riesgo tecnico esta en la configuracion y creacion correcta del cliente externo.
+- El principal riesgo tecnico sigue en la configuracion y creacion correcta del cliente externo.
 - Factory centraliza esa responsabilidad.
-- Dependency Injection mantiene desacoplada la logica de analisis y deja el codigo listo para pruebas y crecimiento.
+- Dependency Injection mantiene desacoplada la logica de analisis y habilita pruebas simples.
 
 ## Recomendacion de evolucion
 
