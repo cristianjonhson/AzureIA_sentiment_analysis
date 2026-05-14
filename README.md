@@ -128,6 +128,17 @@ Con el entorno virtual activo y variables configuradas:
 python sentiment_analysis.py
 ```
 
+Tambien puedes pasar texto e idioma por parametros:
+
+```bash
+python sentiment_analysis.py --text "El servicio fue rapido, pero la app fallo dos veces" --language es
+```
+
+Parametros disponibles:
+
+- `--text`: texto a analizar.
+- `--language`: codigo de idioma (por ejemplo, `es`, `en`, `pt`).
+
 ## Salida esperada
 
 El script imprime en consola secciones similares a:
@@ -187,3 +198,11 @@ Documento detallado (con justificación y ubicación exacta en código):
 - Exportar resultados a JSON/CSV.
 - Agregar pruebas unitarias para validación y parseo de respuestas.
 - Agregar archivo `.env.example` y carga automática de variables con python-dotenv.
+
+## Limpieza técnica aplicada
+
+Se aplico una pasada de limpieza tecnica menor para mejorar mantenibilidad:
+
+- Consistencia de organizacion: separacion de parseo de argumentos, construccion de documentos y analisis.
+- Reduccion de warnings potenciales: tipado mas estricto en puntuaciones de confianza.
+- Ejecucion mas flexible: soporte de parametros CLI para texto e idioma.
