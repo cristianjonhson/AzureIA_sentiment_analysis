@@ -10,16 +10,31 @@ from azure.core.exceptions import AzureError
 
 def create_client() -> TextAnalyticsClient:
     """Crea el cliente de Azure Language usando variables de entorno."""
-    endpoint = os.getenv("LANGUAGE_ENDPOINT")
-    key = os.getenv("LANGUAGE_KEY")
+    endpoint = os.getenv("LANGUAGE_ENDPOINT", "").strip()
+    key = os.getenv("LANGUAGE_KEY", "").strip()
+
+    # Elimina accidentalmente comillas copiadas dentro del valor.
+    endpoint = endpoint.strip("\"'“”")
+    key = key.strip("\"'“”")
 
     if not endpoint or not key:
         raise RuntimeError(
             "Faltan las variables LANGUAGE_ENDPOINT o LANGUAGE_KEY."
         )
 
+    if not endpoint.startswith("https://"):
+        raise RuntimeError(
+            "LANGUAGE_ENDPOINT debe comenzar con https://"
+        )
+
+    if "/api/projects/" in endpoint:
+        raise RuntimeError(
+            "Se configuró el endpoint del proyecto Foundry. "
+            "Utiliza el endpoint del recurso Azure AI Language."
+        )
+
     return TextAnalyticsClient(
-        endpoint=endpoint,
+        endpoint=endpoint.rstrip("/"),
         credential=AzureKeyCredential(key),
     )
 
